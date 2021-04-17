@@ -1,0 +1,37 @@
+<html>
+
+    <head>
+        <!-- Load TensorFlow.js -->
+        <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.2"></script>
+        <!-- Load BodyPix -->
+        <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.0"></script>
+        <script type="text/javascript" src="js/multi.js"></script>
+
+        <style type="text/css">
+            .monitor {
+                position: relative;
+            }
+            #player {
+                position: absolute;
+                top: 0;
+                left: 0;
+                transform: rotateY(180deg);
+                -webkit-transform: rotateY(180deg);
+                -moz-transform: rotateY(180deg);
+            }
+            #output {
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div className="monitor">
+            <video id="player" width="1080px" height="720px"></video>
+            <canvas id="output" width="1080px" height="720px"></canvas>
+        </div>
+    </body>
+
+</html>

@@ -1,0 +1,116 @@
+<html>
+
+<head>
+  <!-- Load TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.2"></script>
+  <!-- Load BodyPix -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.0"></script>
+  <style type="text/css">
+    .monitor {
+      position: relative;
+    }
+
+    #player {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform: rotateY(180deg);
+      -webkit-transform: rotateY(180deg);
+      -moz-transform: rotateY(180deg);
+    }
+
+    #output {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div className="monitor">
+    <video id="player" width="1080px" height="720px"></video>
+    <canvas id="output" width="1080px" height="720px"></canvas>
+  </div>
+</body>
+
+<script>
+
+  async function main() {
+    const cameraSize = { w: 1080, h: 720 };
+    const canvasSize = { w: 1080, h: 720 };
+    const resolution = { w: 1080, h: 720 };
+    let media;
+
+    const net = await bodyPix.load(/** optional arguments, see below **/);
+
+    const video = document.getElementById('player');
+    const output = document.getElementById('output');
+
+    video.autoplay = true;
+    // document.getElementById('videoPreview').appendChild(video);
+
+    // video要素にWebカメラの映像を表示させる
+    media = navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        width: { ideal: resolution.w },
+        height: { ideal: resolution.h }
+      }
+    }).then(function (stream) {
+      video.srcObject = stream;
+    });
+
+    output.width = canvasSize.w;
+    output.height = canvasSize.h;
+    var n = 1;
+
+    const hana = new Image();
+    hana.src = "images/hana.png";
+
+    const flowers = new Array()
+    const start = Date.now()
+
+    const ctx = output.getContext("2d");
+
+    setInterval(async () => {
+      const bodies = await net.segmentMultiPerson(video);
+      // if (flowers.length > 30) {
+      //   flowers.shift()
+      // }
+      bodies && bodies.map((body) => {
+        // console.log(body.pose.keypoints)
+        const nose = body.pose.keypoints[0]
+        const leftEye = body.pose.keypoints[1]
+        const rightEye = body.pose.keypoints[2]
+        if (leftEye.score > 0.6 && rightEye.score > 0.6) {
+          const scale = Math.abs(leftEye.position.x - rightEye.position.x)
+          const pause = Date.now()
+          const flower = {
+            x: output.width - nose.position.x - scale / 2,
+            y: nose.position.y - scale / 2,
+            scale: scale,
+            time: pause
+          }
+          flowers.push(flower)
+          // console.log(flowers)
+        }
+      });
+
+      ctx.clearRect(0, 0, 1080, 720);
+      const stop = Date.now()
+      const drawFlowers = flowers
+      drawFlowers.map((f, idx) => {
+        ctx.drawImage(hana, f.x, f.y, f.scale, f.scale)
+      })
+      flowers.map((f, idx) => {
+        if (stop - f.time > 2000) {
+          flowers.splice(idx, 1)
+        }
+      })
+    }, 200);
+  }
+  main();
+</script>
+
+</html>
